@@ -49,3 +49,6 @@
 .qv-object-Qlik-Sense-Image-Navigation img.keep {
   border-width: 0px;
 }
+.qv-object-Qlik-Sense-Image-Navigation .qv-object-nav > a {
+  display:none
+}

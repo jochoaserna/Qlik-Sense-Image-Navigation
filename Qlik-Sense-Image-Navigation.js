@@ -131,6 +131,10 @@ define( [
                 value: "gotoSheet",
                 label: "Go to a specific sheet"
               },
+              {
+                value: "comingfromSheet",
+                label: "Coming from sheet"
+              },
             ]
           };
 
@@ -149,9 +153,8 @@ define( [
             }
           };
 
-        var selectedSheet = sheetList
-
-
+        var selectedSheet = sheetList;
+    
         return {
             definition: {
                 type: "items",
@@ -195,6 +198,7 @@ define( [
                   .click(
                     function(){
                       qlik.navigation.nextSheet();// goes to next sheet
+                      app.variable.setContent('initialSheet', qlik.navigation.getCurrentSheetId().sheetId);
                     }
                   )  
                  
@@ -203,6 +207,7 @@ define( [
                   .click(
                     function(){
                       qlik.navigation.prevSheet();// goes to prev sheet
+                      app.variable.setContent('initialSheet', qlik.navigation.getCurrentSheetId().sheetId);
                     }
                   )
 
@@ -211,9 +216,20 @@ define( [
                   .click(
                     function(){
                       qlik.navigation.gotoSheet(''+ layout.props.selectedSheet +'');// goes to the selected sheet
+                      app.variable.setContent('initialSheet', qlik.navigation.getCurrentSheetId().sheetId);
                     }
                   )
 
+                app.variable.getContent('initialSheet',function ( reply ) { 
+                  $('.comingfromSheet-'+layout.qInfo.qId)
+                    .css('cursor', 'pointer')
+                    .click(
+                      function(){
+                        qlik.navigation.gotoSheet(''+ reply.qContent.qString +'');// goes to the coming sheet
+                        app.variable.setContent('initialSheet', qlik.navigation.getCurrentSheetId().sheetId);
+                      }
+                    )
+                } );
             }
         };
     } );
