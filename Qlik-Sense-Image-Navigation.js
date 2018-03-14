@@ -8,6 +8,9 @@ define( [
         'use strict';
         $( '<style>' ).html(cssContent).appendTo( 'head' );
         var app = qlik.currApp();
+
+        //app.variable.create('vNavigation');
+
         var imageFormattingHeader = {
             type: "items",
             label: "Image Formatting",
@@ -17,7 +20,7 @@ define( [
                     ref: "props.image.horizontalAlign",
                     component: "buttongroup",
                     label: "Horizontal align",
-                    options: [
+                    optionas: [
                         {
                             value: "left",
                             label: "Left"
@@ -31,7 +34,7 @@ define( [
                             label: "Right"
                         }
                     ],
-                    defaultValue: "left"
+                    defaultValue: "center"
                 },
                 imageVerticalAlign: {
                     type: "string",
@@ -154,6 +157,47 @@ define( [
           };
 
         var selectedSheet = sheetList;
+
+        var isActionsBefore = {
+          type: "boolean",
+          component: "switch",
+          label: "Actions before navigating",
+          ref: "props.isActionsBefore",
+          defaultValue: false,
+          options: [
+            {
+              value: true,
+              label: "Enabled"
+            },
+            {
+              value: false,
+              label: "Disabled"
+            }
+          ]
+        };
+
+        var actionOptions = [
+          {
+            value: "none",
+            label: "None"
+          },
+          {
+            value: "clearAll",
+            label: "Clear All Selections"
+          },
+        ];
+
+        var actionBefore = {
+          type: "string",
+          component: "dropdown",
+          label: "First Action",
+          ref: "props.actionBefore",
+          defaultValue: "none",
+          show: function (data) {
+            return data.props.isActionsBefore;
+          },
+          options: actionOptions
+        };
     
         return {
             definition: {
@@ -178,17 +222,41 @@ define( [
                                   action: action,
                                   sheetList: sheetList
                                 }
+                              },
+                            actionsBefore: {
+                              type: "items",
+                              label: "Actions",
+                              items: {
+                                isActionsBefore: isActionsBefore,
+                                actionBefore: actionBefore,
                               }
+                            }
+
                         }
                     }
                 }
             },
 
+
             paint: function ( $element, layout ) {
                 $element.empty(); 
                 console.info('paint >> layout >> ', layout); 
                 var $msg = $( document.createElement( 'div' ) );
-                var html = '<img id="'+layout.qInfo.qId+'" src="' + layout.myMedia +'" class="'+ layout.props.action+'-'+layout.qInfo.qId +' '+ layout.props.image.verticalAlign +' '+ layout.props.image.horizontalAlign +' '+ layout.props.image.imageAspectRatio +'" />';
+
+                var origUrl = window.location.href;
+                var searchUrl= "/app/";
+                var searchUrl2 = "/sheet/";
+                var appId = "appcontent/"+ origUrl.substring(origUrl.indexOf(searchUrl)+searchUrl.length,origUrl.indexOf(searchUrl2)) + "/";
+                var res = layout.myMedia;
+
+                var searchUrl3 = "appcontent";
+                var isAppContent = layout.myMedia.substring(0,layout.myMedia.indexOf(searchUrl3)+searchUrl3.length);
+
+                if (isAppContent == "/appcontent" ){
+                  var res = layout.myMedia.replace(/appcontent\/.*\//, appId);
+                };
+
+                var html = '<img id="'+layout.qInfo.qId+'" src="' + res +'" class="'+ layout.props.action+'-'+layout.qInfo.qId +' '+ layout.props.image.verticalAlign +' '+ layout.props.image.horizontalAlign +' '+ layout.props.image.imageAspectRatio +'" />';
                 console.info('html: ', html);
                 $msg.html( html );
                 $element.append( $msg );
@@ -197,38 +265,50 @@ define( [
                   .css('cursor', 'pointer')
                   .click(
                     function(){
+                      if (layout.props.actionBefore == "clearAll") {
+                          app.clearAll();
+                      };
                       qlik.navigation.nextSheet();// goes to next sheet
-                      app.variable.setContent('initialSheet', qlik.navigation.getCurrentSheetId().sheetId);
+                      app.variable.setContent('vNavigation', qlik.navigation.getCurrentSheetId().sheetId);
                     }
-                  )  
+                  );  
                  
                 $('.prevSheet-'+layout.qInfo.qId)
                   .css('cursor', 'pointer')
                   .click(
                     function(){
+                      if (layout.props.actionBefore == "clearAll") {
+                          app.clearAll();
+                      };
                       qlik.navigation.prevSheet();// goes to prev sheet
-                      app.variable.setContent('initialSheet', qlik.navigation.getCurrentSheetId().sheetId);
+                      app.variable.setContent('vNavigation', qlik.navigation.getCurrentSheetId().sheetId);
                     }
-                  )
+                  );
 
                 $('.gotoSheet-'+layout.qInfo.qId)
                   .css('cursor', 'pointer')
                   .click(
                     function(){
+                      if (layout.props.actionBefore== "clearAll") {
+                          app.clearAll();
+                      };                      
                       qlik.navigation.gotoSheet(''+ layout.props.selectedSheet +'');// goes to the selected sheet
-                      app.variable.setContent('initialSheet', qlik.navigation.getCurrentSheetId().sheetId);
+                      app.variable.setContent('vNavigation', qlik.navigation.getCurrentSheetId().sheetId);
                     }
-                  )
+                  );
 
-                app.variable.getContent('initialSheet',function ( reply ) { 
+                app.variable.getContent('vNavigation',function ( reply ) { 
                   $('.comingfromSheet-'+layout.qInfo.qId)
                     .css('cursor', 'pointer')
                     .click(
                       function(){
+                      if (layout.props.actionBefore == "clearAll") {
+                          app.clearAll();
+                      };                        
                         qlik.navigation.gotoSheet(''+ reply.qContent.qString +'');// goes to the coming sheet
-                        app.variable.setContent('initialSheet', qlik.navigation.getCurrentSheetId().sheetId);
+                        app.variable.setContent('vNavigation', qlik.navigation.getCurrentSheetId().sheetId);
                       }
-                    )
+                    );
                 } );
             }
         };

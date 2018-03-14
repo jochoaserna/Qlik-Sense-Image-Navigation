@@ -4,6 +4,6 @@
 	"icon" : "extension",
 	"preview": "preview.png",
 	"type" : "visualization",
-	"version": "1.2",
+	"version": "1.4",
 	"author": "Javier Ochoa Serna"
 }
